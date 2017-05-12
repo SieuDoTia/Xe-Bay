@@ -9,3 +9,4 @@ Act III Feature Presentation: https://www.youtube.com/watch?v=8W_9dSVEwoA
 
 • Dùng Blender.
 
+• Thuê Xưởng Weybec làm nhân vật xe: http://www.weybec.com/contact/ 
