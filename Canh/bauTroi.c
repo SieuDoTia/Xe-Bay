@@ -1,7 +1,7 @@
 // (1920 × 1080)/(1280 × 720) = (2 073 6000)/(921 600) = 2.25 
 //  Làm ảnh bầu trời cho xài với phần mềm Blender
 //  Phiên Bản 0.55
-//  Phát hành 2560/10/15
+//  Phát hành 2560/10/16
 //  Khởi đầu 2560-02-25
 
 //  Biên dịch cho gcc: gcc -lm -lz doTia.c -o <tên chương trình>
@@ -90,12 +90,12 @@ int main( int argc, char **arg ) {
    giuaTroiTren.x = 0.60f;
 
    Mau dinhTroi;
-   dinhTroi.d = 1.000f;
-   dinhTroi.l = 0.550f;
-   dinhTroi.x = 0.410f;
+   dinhTroi.d = 0.452f;
+   dinhTroi.l = 0.750f;
+   dinhTroi.x = 1.000f;
 
-   float viTriGiuaTren = 0.5f;   // phân số nữa bầu trời cho vị trí màu gĩa trời
-   float viTriGiuaDuoi = 0.05f;   // phân số nữa bầu trời cho vị trí màu gĩa trời
+   float viTriGiuaTren = 0.15f;   // phân số nữa bầu trời cho vị trí màu gĩa trời
+   float viTriGiuaDuoi = 0.02f;   // phân số nữa bầu trời cho vị trí màu gĩa trời
    char tenAnh[] = "BauTroi00.exr";
 
    // ---- bầu trời
@@ -104,7 +104,7 @@ int main( int argc, char **arg ) {
    // ---- mặt trời
    float kinhTuyen = 0.05f;
    float viTuyen = 0.05f;
-   float banKinhMatTroi = 0.01f;
+   float banKinhMatTroi = 0.005f;
    float banKinhHaoQuang = 0.035f;
    
    Mau mauMatTroi;
