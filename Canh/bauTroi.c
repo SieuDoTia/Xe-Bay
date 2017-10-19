@@ -1,7 +1,7 @@
 // (1920 × 1080)/(1280 × 720) = (2 073 6000)/(921 600) = 2.25 
 //  Làm ảnh bầu trời cho xài với phần mềm Blender
 //  Phiên Bản 0.55
-//  Phát hành 2560/10/16
+//  Phát hành 2560/10/18
 //  Khởi đầu 2560-02-25
 
 //  Biên dịch cho gcc: gcc -lm -lz doTia.c -o <tên chương trình>
@@ -51,6 +51,8 @@ void bauTroi( Anh *anhBauTroi, Mau *mauDayTroi, Mau *mauGiuaTroiDuoi, Mau *mauCh
 /*  Mặt Trời */
 void matTroi( Anh *sanhBauTroi, float kinhTuyen, float viTuyen, float banKinhMatTroi, float banKinhHaoQuang, Mau *mauMatTroi );
 
+void mauToiNghichMatTroi( Anh *anhBauTroi, float kinhTuyen, Mau *mauToi );
+
 /* Các Bộ Màu */
 void boVang();
 
@@ -81,8 +83,8 @@ int main( int argc, char **arg ) {
 
    Mau chanTroi;
    chanTroi.d = 1.000f;
-   chanTroi.l = 0.551f;
-   chanTroi.x = 0.410f;
+   chanTroi.l = 0.451f;
+   chanTroi.x = 0.310f;
 
    Mau giuaTroiTren;
    giuaTroiTren.d = 1.00f;
@@ -102,8 +104,8 @@ int main( int argc, char **arg ) {
    bauTroi( &anhBauTroi, &dayTroi, &giuaTroiDuoi, &chanTroi, &giuaTroiTren, &dinhTroi, viTriGiuaDuoi, viTriGiuaTren );
    
    // ---- mặt trời
-   float kinhTuyen = 0.05f;
-   float viTuyen = 0.05f;
+   float kinhTuyenMatTroi = 0.05f;
+   float viTuyenMatTroi = 0.05f;
    float banKinhMatTroi = 0.005f;
    float banKinhHaoQuang = 0.035f;
    
@@ -112,7 +114,13 @@ int main( int argc, char **arg ) {
    mauMatTroi.l = 1.550f*5.0f;
    mauMatTroi.x = 1.00f*5.0f;
    
-   matTroi( &anhBauTroi, kinhTuyen, viTuyen, banKinhMatTroi, banKinhHaoQuang, &mauMatTroi );
+   matTroi( &anhBauTroi, kinhTuyenMatTroi, viTuyenMatTroi, banKinhMatTroi, banKinhHaoQuang, &mauMatTroi );
+   
+   Mau mauToi;
+   mauToi.d = 0.2f;
+   mauToi.l = 0.2f;
+   mauToi.x = 0.5f;
+   mauToiNghichMatTroi( &anhBauTroi, kinhTuyenMatTroi, &mauToi );
    
    luuAnhZIP( tenAnh, &anhBauTroi, kKIEU_HALF, 0 );
    xoaAnh( &anhBauTroi );
@@ -275,7 +283,7 @@ void matTroi( Anh *anhBauTroi, float kinhTuyen, float viTuyen, float banKinhMatT
          }
          // ---- phai màu mặt trời
          else if( banKinhBinh < banKinhBinh_haoQuang ) {
-            float nghichPhaiMau = 0.05f*(sqrtf(banKinhBinh) - banKinh_matTroi)/cachGiuaBanKinh + 0.95f;
+            float nghichPhaiMau = 0.03f*(sqrtf(banKinhBinh) - banKinh_matTroi)/cachGiuaBanKinh + 0.97f;
             float phaiMau = 1.0f - nghichPhaiMau;
             anhBauTroi->kenhDo[hang*beRong + cot] = phaiMau*mauMatTroi->d + nghichPhaiMau*anhBauTroi->kenhDo[hang*beRong + cot];
             anhBauTroi->kenhLuc[hang*beRong + cot] = phaiMau*mauMatTroi->l + nghichPhaiMau*anhBauTroi->kenhLuc[hang*beRong + cot];
@@ -288,6 +296,30 @@ void matTroi( Anh *anhBauTroi, float kinhTuyen, float viTuyen, float banKinhMatT
       hang++;
    }
    
+}
+
+void mauToiNghichMatTroi( Anh *anhBauTroi, float kinhTuyenMatTroi, Mau *mauToi ) {
+   
+   short beRong = anhBauTroi->beRong;
+   short beCao = anhBauTroi->beRong >> 1;
+   short nuaBeCao = beRong >> 2;        // (0,25)
+   short viTuyen_matTroi = kinhTuyenMatTroi*anhBauTroi->beRong;
+   
+   short hang = 0;
+   while( hang < beCao ) {
+      short cot = 0;
+      while( cot < beRong ) {
+         short cachViTuyen = cot - viTuyen_matTroi;
+         if( cachViTuyen < 0 )
+            cachViTuyen = -cachViTuyen;
+         
+         if( (cachViTuyen > beCao) && (cachViTuyen < beRong*0.75f) ) { // beCao == beRong/2
+            ;
+         }
+         cot++;
+      }
+      hang++;
+   }
 }
 
 #pragma mark ---- Màu
