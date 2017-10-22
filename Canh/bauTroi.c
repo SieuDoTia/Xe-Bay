@@ -1,7 +1,7 @@
 // (1920 × 1080)/(1280 × 720) = (2 073 6000)/(921 600) = 2.25 
 //  Làm ảnh bầu trời cho xài với phần mềm Blender
 //  Phiên Bản 0.55
-//  Phát hành 2560/10/18
+//  Phát hành 2560/10/20
 //  Khởi đầu 2560-02-25
 
 //  Biên dịch cho gcc: gcc -lm -lz doTia.c -o <tên chương trình>
@@ -66,7 +66,7 @@ void xoaAnh( Anh *anh );
 
 int main( int argc, char **arg ) {
 
-   unsigned short beRong = 2048;
+   unsigned short beRong = 3072;
    unsigned short beCao = beRong >> 1;
    Anh anhBauTroi = taoAnhVoiCoKich( beRong, beCao, 1.0f );
 
@@ -298,24 +298,54 @@ void matTroi( Anh *anhBauTroi, float kinhTuyen, float viTuyen, float banKinhMatT
    
 }
 
+//
+//        0,0       0,5  0,6 0,7
+//        0,2        0,7  0,8 0,9
+// +-------------------+----+
+// |                   |    |
+// |       o           |    |
+// +-------------------+----+
+// |                   |    |
+// |                   |    |
+// +-------------------+----+
+//
+
 void mauToiNghichMatTroi( Anh *anhBauTroi, float kinhTuyenMatTroi, Mau *mauToi ) {
    
    short beRong = anhBauTroi->beRong;
    short beCao = anhBauTroi->beRong >> 1;
    short nuaBeCao = beRong >> 2;        // (0,25)
-   short viTuyen_matTroi = kinhTuyenMatTroi*anhBauTroi->beRong;
+   short kinhTuyen_matTroi = kinhTuyenMatTroi*anhBauTroi->beRong;
+   printf( "kinhTuyen matTroi %d\n", kinhTuyen_matTroi );
    
    short hang = 0;
    while( hang < beCao ) {
+      
+      float tiSoHang = 1.0f;
+      if( hang < nuaBeCao )
+         tiSoHang = (float)hang/(float)nuaBeCao;
+      else
+         tiSoHang = (float)(beCao - hang)/(float)nuaBeCao;
+
       short cot = 0;
       while( cot < beRong ) {
-         short cachViTuyen = cot - viTuyen_matTroi;
-         if( cachViTuyen < 0 )
-            cachViTuyen = -cachViTuyen;
+         short cachKinhTuyen = cot - kinhTuyen_matTroi;
+         if( cachKinhTuyen < 0 )
+            cachKinhTuyen = -cachKinhTuyen;
          
-         if( (cachViTuyen > beCao) && (cachViTuyen < beRong*0.75f) ) { // beCao == beRong/2
-            ;
+         if( cachKinhTuyen < -beCao )
+            cachKinhTuyen = beRong - cachKinhTuyen;
+         else if( cachKinhTuyen > beCao ) {
+            cachKinhTuyen = beRong - cachKinhTuyen;
          }
+         float nghichPhaMau = 0.5f*(float)cachKinhTuyen/(float)beCao;
+         nghichPhaMau *= tiSoHang;
+         float phaMau = 1.0f - nghichPhaMau;
+         if( hang == nuaBeCao )
+         printf( "cot %d  cacKinh %d   nghichPha %5.3f  pha %5.3f\n", cot, cachKinhTuyen, nghichPhaMau, phaMau );
+         anhBauTroi->kenhDo[hang*beRong + cot] = phaMau*anhBauTroi->kenhDo[hang*beRong + cot] + nghichPhaMau*mauToi->d;
+         anhBauTroi->kenhLuc[hang*beRong + cot] = phaMau*anhBauTroi->kenhLuc[hang*beRong + cot] + nghichPhaMau*mauToi->l;
+         anhBauTroi->kenhXanh[hang*beRong + cot] = phaMau*anhBauTroi->kenhXanh[hang*beRong + cot] + nghichPhaMau*mauToi->x;
          cot++;
       }
       hang++;
