@@ -1,7 +1,7 @@
 // (1920 × 1080)/(1280 × 720) = (2 073 6000)/(921 600) = 2.25 
 //  Làm ảnh bầu trời cho xài với phần mềm Blender
-//  Phiên Bản 0.55
-//  Phát hành 2560/10/20
+//  Phiên Bản 0.65
+//  Phát hành 2560/10/26
 //  Khởi đầu 2560-02-25
 
 //  Biên dịch cho gcc: gcc -lm -lz doTia.c -o <tên chương trình>
@@ -45,16 +45,40 @@ typedef struct {
    float *kenhXa;    // kênh cách xa
 } Anh;
 
+
+/* Môi Trường */
+typedef struct {
+   Mau mauDayTroi;             // đấy trời
+   Mau mauGiuaTroiDuoi;        // màu giữa trời dượi
+   Mau mauChanTroi;            // màu chân trời
+   Mau mauGiuaTroiTren;        // màu giữa trời trên
+   Mau mauDinhTroi;            // màu đỉnh trời
+   float viTriMauGiuaTren;   // phân số nữa bầu trời cho vị trí màu giữa trời
+   float viTriMauGiuaDuoi;   // phân số nữa bầu trời cho vị trí màu giữa trời
+
+   
+   unsigned char coMatTroi; // có mặt trời - đêm không mặt trời
+   Mau mauMatTroi;          // màu mặt trời
+   float kinhTuyenMatTroi;  // kinh tuyến mặt trời
+   float viTuyenMatTroi;    // vĩ tuyến mặt trời
+   float banKinhMatTroi;    // bán kính mặt trời
+   float banKinhHaoQuang;   // bán kính hào quang
+   
+   Mau mauToi;           // màu tối - cho hướng ngược chiều mặt trời
+} MoiTruong;
+
 /* Bầu Trời */
-void bauTroi( Anh *anhBauTroi, Mau *mauDayTroi, Mau *mauGiuaTroiDuoi, Mau *mauChanTroi, Mau *mauGiuaTroiTren, Mau *mauDinhTroi, float viTriGiuaDuoi, float viTriGiuaTren );
+void bauTroi( Anh *anhBauTroi, MoiTruong *moiTruong );
 
 /*  Mặt Trời */
-void matTroi( Anh *sanhBauTroi, float kinhTuyen, float viTuyen, float banKinhMatTroi, float banKinhHaoQuang, Mau *mauMatTroi );
+void matTroi( Anh *sanhBauTroi, MoiTruong *moiTruong );
 
-void mauToiNghichMatTroi( Anh *anhBauTroi, float kinhTuyen, Mau *mauToi );
+void mauToiNghichMatTroi( Anh *anhBauTroi, MoiTruong *moiTruong );
 
-/* Các Bộ Màu */
-void boVang();
+/* Các bộ màu bầu trời */
+MoiTruong bauTroiVang();
+MoiTruong bauTroiChieu_xeBay();
+MoiTruong bauTroiToi_xeBay();
 
 
 // ---- lưu ảnh RLE
@@ -71,56 +95,16 @@ int main( int argc, char **arg ) {
    Anh anhBauTroi = taoAnhVoiCoKich( beRong, beCao, 1.0f );
 
  //  if( argc > 0 )
-   Mau dayTroi;
-   dayTroi.d = 0.270f;
-   dayTroi.l = 0.20f;
-   dayTroi.x = 0.10f;
-
-   Mau giuaTroiDuoi;
-   giuaTroiDuoi.d = 0.70f;
-   giuaTroiDuoi.l = 0.40f;
-   giuaTroiDuoi.x = 0.270f;
-
-   Mau chanTroi;
-   chanTroi.d = 1.000f;
-   chanTroi.l = 0.451f;
-   chanTroi.x = 0.310f;
-
-   Mau giuaTroiTren;
-   giuaTroiTren.d = 1.00f;
-   giuaTroiTren.l = 0.72f;
-   giuaTroiTren.x = 0.60f;
-
-   Mau dinhTroi;
-   dinhTroi.d = 0.452f;
-   dinhTroi.l = 0.750f;
-   dinhTroi.x = 1.000f;
-
-   float viTriGiuaTren = 0.15f;   // phân số nữa bầu trời cho vị trí màu gĩa trời
-   float viTriGiuaDuoi = 0.02f;   // phân số nữa bầu trời cho vị trí màu gĩa trời
+   MoiTruong moiTruong = bauTroiToi_xeBay();
    char tenAnh[] = "BauTroi00.exr";
 
    // ---- bầu trời
-   bauTroi( &anhBauTroi, &dayTroi, &giuaTroiDuoi, &chanTroi, &giuaTroiTren, &dinhTroi, viTriGiuaDuoi, viTriGiuaTren );
+   bauTroi( &anhBauTroi, &moiTruong );
    
-   // ---- mặt trời
-   float kinhTuyenMatTroi = 0.05f;
-   float viTuyenMatTroi = 0.05f;
-   float banKinhMatTroi = 0.005f;
-   float banKinhHaoQuang = 0.035f;
-   
-   Mau mauMatTroi;
-   mauMatTroi.d = 2.375f*5.0f;
-   mauMatTroi.l = 1.550f*5.0f;
-   mauMatTroi.x = 1.00f*5.0f;
-   
-   matTroi( &anhBauTroi, kinhTuyenMatTroi, viTuyenMatTroi, banKinhMatTroi, banKinhHaoQuang, &mauMatTroi );
-   
-   Mau mauToi;
-   mauToi.d = 0.2f;
-   mauToi.l = 0.2f;
-   mauToi.x = 0.5f;
-   mauToiNghichMatTroi( &anhBauTroi, kinhTuyenMatTroi, &mauToi );
+   if( moiTruong.coMatTroi ) {
+      matTroi( &anhBauTroi, &moiTruong );
+      mauToiNghichMatTroi( &anhBauTroi, &moiTruong );
+   }
    
    luuAnhZIP( tenAnh, &anhBauTroi, kKIEU_HALF, 0 );
    xoaAnh( &anhBauTroi );
@@ -144,41 +128,41 @@ int main( int argc, char **arg ) {
 // 0,0                                  1.0
 
 
-void bauTroi( Anh *anhBauTroi, Mau *mauDayTroi, Mau *mauGiuaTroiDuoi, Mau *mauChanTroi, Mau *mauGiuaTroiTren, Mau *mauDinhTroi, float viTriGiuaDuoi, float viTriGiuaTren ) {
+void bauTroi( Anh *anhBauTroi, MoiTruong *moiTruong ) {
 
    unsigned short beRong = anhBauTroi->beRong;
    unsigned short nuaBeCao = beRong >> 2;        // (0,25)
-   unsigned short giuaTroiDuoi = nuaBeCao - nuaBeCao*viTriGiuaDuoi;
-   unsigned short giuaTroiTren = nuaBeCao + nuaBeCao*viTriGiuaTren;
+   unsigned short giuaTroiDuoi = nuaBeCao - nuaBeCao*moiTruong->viTriMauGiuaDuoi;
+   unsigned short giuaTroiTren = nuaBeCao + nuaBeCao*moiTruong->viTriMauGiuaTren;
 
    
    // ----
-   float cach_giuaDay = nuaBeCao*(1.0f - viTriGiuaDuoi);
-   float cach_giuaDinh = nuaBeCao*(1.0f - viTriGiuaTren);
+   float cach_giuaDay = nuaBeCao*(1.0f - moiTruong->viTriMauGiuaDuoi);
+   float cach_giuaDinh = nuaBeCao*(1.0f - moiTruong->viTriMauGiuaTren);
 
    Mau buocMau_giuaDayDuoi;
-   buocMau_giuaDayDuoi.d = (mauDayTroi->d - mauGiuaTroiDuoi->d)/cach_giuaDay;
-   buocMau_giuaDayDuoi.l = (mauDayTroi->l - mauGiuaTroiDuoi->l)/cach_giuaDay;
-   buocMau_giuaDayDuoi.x = (mauDayTroi->x - mauGiuaTroiDuoi->x)/cach_giuaDay;
+   buocMau_giuaDayDuoi.d = (moiTruong->mauDayTroi.d - moiTruong->mauGiuaTroiDuoi.d)/cach_giuaDay;
+   buocMau_giuaDayDuoi.l = (moiTruong->mauDayTroi.l - moiTruong->mauGiuaTroiDuoi.l)/cach_giuaDay;
+   buocMau_giuaDayDuoi.x = (moiTruong->mauDayTroi.x - moiTruong->mauGiuaTroiDuoi.x)/cach_giuaDay;
 
    // ----
    Mau buocMau_giuaDinhTren;
-   buocMau_giuaDinhTren.d = (mauDinhTroi->d - mauGiuaTroiTren->d)/cach_giuaDinh;
-   buocMau_giuaDinhTren.l = (mauDinhTroi->l - mauGiuaTroiTren->l)/cach_giuaDinh;
-   buocMau_giuaDinhTren.x = (mauDinhTroi->x - mauGiuaTroiTren->x)/cach_giuaDinh;
+   buocMau_giuaDinhTren.d = (moiTruong->mauDinhTroi.d - moiTruong->mauGiuaTroiTren.d)/cach_giuaDinh;
+   buocMau_giuaDinhTren.l = (moiTruong->mauDinhTroi.l - moiTruong->mauGiuaTroiTren.l)/cach_giuaDinh;
+   buocMau_giuaDinhTren.x = (moiTruong->mauDinhTroi.x - moiTruong->mauGiuaTroiTren.x)/cach_giuaDinh;
 
    // ----
-   float cach_chanGiuaDuoi = nuaBeCao*viTriGiuaDuoi;
+   float cach_chanGiuaDuoi = nuaBeCao*moiTruong->viTriMauGiuaDuoi;
    Mau buocMau_chanGiuaDuoi;
-   buocMau_chanGiuaDuoi.d = (mauGiuaTroiDuoi->d - mauChanTroi->d)/cach_chanGiuaDuoi;
-   buocMau_chanGiuaDuoi.l = (mauGiuaTroiDuoi->l - mauChanTroi->l)/cach_chanGiuaDuoi;
-   buocMau_chanGiuaDuoi.x = (mauGiuaTroiDuoi->x - mauChanTroi->x)/cach_chanGiuaDuoi;
+   buocMau_chanGiuaDuoi.d = (moiTruong->mauGiuaTroiDuoi.d - moiTruong->mauChanTroi.d)/cach_chanGiuaDuoi;
+   buocMau_chanGiuaDuoi.l = (moiTruong->mauGiuaTroiDuoi.l - moiTruong->mauChanTroi.l)/cach_chanGiuaDuoi;
+   buocMau_chanGiuaDuoi.x = (moiTruong->mauGiuaTroiDuoi.x - moiTruong->mauChanTroi.x)/cach_chanGiuaDuoi;
    
-   float cach_chanGiuaTren = nuaBeCao*viTriGiuaTren;
+   float cach_chanGiuaTren = nuaBeCao*moiTruong->viTriMauGiuaTren;
    Mau buocMau_chanGiuaTren;
-   buocMau_chanGiuaTren.d = (mauGiuaTroiTren->d - mauChanTroi->d)/cach_chanGiuaTren;
-   buocMau_chanGiuaTren.l = (mauGiuaTroiTren->l - mauChanTroi->l)/cach_chanGiuaTren;
-   buocMau_chanGiuaTren.x = (mauGiuaTroiTren->x - mauChanTroi->x)/cach_chanGiuaTren;
+   buocMau_chanGiuaTren.d = (moiTruong->mauGiuaTroiTren.d - moiTruong->mauChanTroi.d)/cach_chanGiuaTren;
+   buocMau_chanGiuaTren.l = (moiTruong->mauGiuaTroiTren.l - moiTruong->mauChanTroi.l)/cach_chanGiuaTren;
+   buocMau_chanGiuaTren.x = (moiTruong->mauGiuaTroiTren.x - moiTruong->mauChanTroi.x)/cach_chanGiuaTren;
 
 
    // ==== tô màu
@@ -187,27 +171,27 @@ void bauTroi( Anh *anhBauTroi, Mau *mauDayTroi, Mau *mauGiuaTroiDuoi, Mau *mauCh
       unsigned short cot = 0;
       Mau mauHang;
       if( hang < giuaTroiDuoi ) {
-          mauHang.d = mauDayTroi->d - buocMau_giuaDayDuoi.d*hang;
-          mauHang.l = mauDayTroi->l - buocMau_giuaDayDuoi.l*hang;
-          mauHang.x = mauDayTroi->x - buocMau_giuaDayDuoi.x*hang;
+          mauHang.d = moiTruong->mauDayTroi.d - buocMau_giuaDayDuoi.d*hang;
+          mauHang.l = moiTruong->mauDayTroi.l - buocMau_giuaDayDuoi.l*hang;
+          mauHang.x = moiTruong->mauDayTroi.x - buocMau_giuaDayDuoi.x*hang;
       }
       else if( hang < nuaBeCao ) {
           unsigned short hangTuongDoi = hang - giuaTroiDuoi;
-          mauHang.d = mauGiuaTroiDuoi->d - buocMau_chanGiuaDuoi.d*hangTuongDoi;
-          mauHang.l = mauGiuaTroiDuoi->l - buocMau_chanGiuaDuoi.l*hangTuongDoi;
-          mauHang.x = mauGiuaTroiDuoi->x - buocMau_chanGiuaDuoi.x*hangTuongDoi;
+          mauHang.d = moiTruong->mauGiuaTroiDuoi.d - buocMau_chanGiuaDuoi.d*hangTuongDoi;
+          mauHang.l = moiTruong->mauGiuaTroiDuoi.l - buocMau_chanGiuaDuoi.l*hangTuongDoi;
+          mauHang.x = moiTruong->mauGiuaTroiDuoi.x - buocMau_chanGiuaDuoi.x*hangTuongDoi;
       }
       else if( hang < giuaTroiTren ) {
           unsigned short hangTuongDoi = hang - nuaBeCao;
-          mauHang.d = mauChanTroi->d + buocMau_chanGiuaTren.d*hangTuongDoi;
-          mauHang.l = mauChanTroi->l + buocMau_chanGiuaTren.l*hangTuongDoi;
-          mauHang.x = mauChanTroi->x + buocMau_chanGiuaTren.x*hangTuongDoi;
+          mauHang.d = moiTruong->mauChanTroi.d + buocMau_chanGiuaTren.d*hangTuongDoi;
+          mauHang.l = moiTruong->mauChanTroi.l + buocMau_chanGiuaTren.l*hangTuongDoi;
+          mauHang.x = moiTruong->mauChanTroi.x + buocMau_chanGiuaTren.x*hangTuongDoi;
       }
       else {
           unsigned short hangTuongDoi = hang - giuaTroiTren;
-          mauHang.d = mauGiuaTroiTren->d + buocMau_giuaDinhTren.d*hangTuongDoi;
-          mauHang.l = mauGiuaTroiTren->l + buocMau_giuaDinhTren.l*hangTuongDoi;
-          mauHang.x = mauGiuaTroiTren->x + buocMau_giuaDinhTren.x*hangTuongDoi;
+          mauHang.d = moiTruong->mauGiuaTroiTren.d + buocMau_giuaDinhTren.d*hangTuongDoi;
+          mauHang.l = moiTruong->mauGiuaTroiTren.l + buocMau_giuaDinhTren.l*hangTuongDoi;
+          mauHang.x = moiTruong->mauGiuaTroiTren.x + buocMau_giuaDinhTren.x*hangTuongDoi;
 //printf( "%5.3f %5.3f %5.3f\n", mauHang.d, mauHang.l, mauHang.x );
       }
 
@@ -232,26 +216,26 @@ void bauTroi( Anh *anhBauTroi, Mau *mauDayTroi, Mau *mauGiuaTroiDuoi, Mau *mauCh
 //         +-------> bán kính hào quang
 //         +---->    bán kính mặt trời
 
-void matTroi( Anh *anhBauTroi, float kinhTuyen, float viTuyen, float banKinhMatTroi, float banKinhHaoQuang, Mau *mauMatTroi ) {
+void matTroi( Anh *anhBauTroi, MoiTruong *moiTruong ) {
    
    short beRong = anhBauTroi->beRong;
    
-   short banKinh_matTroi = banKinhMatTroi*beRong;
+   short banKinh_matTroi = moiTruong->banKinhMatTroi*beRong;
    short banKinhBinh_matTroi = banKinh_matTroi*banKinh_matTroi;
    
-   short banKinhBinh_haoQuang = banKinhHaoQuang*beRong;
+   short banKinhBinh_haoQuang = moiTruong->banKinhHaoQuang*beRong;
    banKinhBinh_haoQuang *= banKinhBinh_haoQuang;
    
-   float cachGiuaBanKinh = (banKinhHaoQuang - banKinhMatTroi)*beRong;
+   float cachGiuaBanKinh = (moiTruong->banKinhHaoQuang - moiTruong->banKinhMatTroi)*beRong;
 
    // ---- tính vùng mặt trời
-   short benTrai = (kinhTuyen - banKinhHaoQuang)*beRong;
-   short benPhai = (kinhTuyen + banKinhHaoQuang)*beRong;
-   short benDuoi = (viTuyen - banKinhHaoQuang + 0.25f)*beRong;
-   short benTren = (viTuyen + banKinhHaoQuang + 0.25f)*beRong;
+   short benTrai = (moiTruong->kinhTuyenMatTroi - moiTruong->banKinhHaoQuang)*beRong;
+   short benPhai = (moiTruong->kinhTuyenMatTroi + moiTruong->banKinhHaoQuang)*beRong;
+   short benDuoi = (moiTruong->viTuyenMatTroi - moiTruong->banKinhHaoQuang + 0.25f)*beRong;
+   short benTren = (moiTruong->viTuyenMatTroi + moiTruong->banKinhHaoQuang + 0.25f)*beRong;
    
-   short tamX = kinhTuyen*beRong;
-   short tamY = (viTuyen + 0.25f)*beRong;
+   short tamX = moiTruong->kinhTuyenMatTroi*beRong;
+   short tamY = (moiTruong->viTuyenMatTroi + 0.25f)*beRong;   // <--------
    
    if( benTrai < 0 )
       benTrai = 0;
@@ -277,17 +261,20 @@ void matTroi( Anh *anhBauTroi, float kinhTuyen, float viTuyen, float banKinhMatT
 //         printf( "%d < %d\n", banKinhBinh, banKinhBinh_matTroi );
          // ---- tô màu mặt trời
          if( banKinhBinh < banKinhBinh_matTroi ) {
-            anhBauTroi->kenhDo[hang*beRong + cot] = mauMatTroi->d;
-            anhBauTroi->kenhLuc[hang*beRong + cot] = mauMatTroi->l;
-            anhBauTroi->kenhXanh[hang*beRong + cot] = mauMatTroi->x;
+            anhBauTroi->kenhDo[hang*beRong + cot] = moiTruong->mauMatTroi.d;
+            anhBauTroi->kenhLuc[hang*beRong + cot] = moiTruong->mauMatTroi.l;
+            anhBauTroi->kenhXanh[hang*beRong + cot] = moiTruong->mauMatTroi.x;
          }
          // ---- phai màu mặt trời
          else if( banKinhBinh < banKinhBinh_haoQuang ) {
             float nghichPhaiMau = 0.03f*(sqrtf(banKinhBinh) - banKinh_matTroi)/cachGiuaBanKinh + 0.97f;
             float phaiMau = 1.0f - nghichPhaiMau;
-            anhBauTroi->kenhDo[hang*beRong + cot] = phaiMau*mauMatTroi->d + nghichPhaiMau*anhBauTroi->kenhDo[hang*beRong + cot];
-            anhBauTroi->kenhLuc[hang*beRong + cot] = phaiMau*mauMatTroi->l + nghichPhaiMau*anhBauTroi->kenhLuc[hang*beRong + cot];
-            anhBauTroi->kenhXanh[hang*beRong + cot] = phaiMau*mauMatTroi->x + nghichPhaiMau*anhBauTroi->kenhXanh[hang*beRong + cot];
+            anhBauTroi->kenhDo[hang*beRong + cot] = phaiMau*moiTruong->mauMatTroi.d
+                                 + nghichPhaiMau*anhBauTroi->kenhDo[hang*beRong + cot];
+            anhBauTroi->kenhLuc[hang*beRong + cot] = phaiMau*moiTruong->mauMatTroi.l
+                                 + nghichPhaiMau*anhBauTroi->kenhLuc[hang*beRong + cot];
+            anhBauTroi->kenhXanh[hang*beRong + cot] = phaiMau*moiTruong->mauMatTroi.x
+                                 + nghichPhaiMau*anhBauTroi->kenhXanh[hang*beRong + cot];
          }
          
          cot++;
@@ -310,13 +297,13 @@ void matTroi( Anh *anhBauTroi, float kinhTuyen, float viTuyen, float banKinhMatT
 // +-------------------+----+
 //
 
-void mauToiNghichMatTroi( Anh *anhBauTroi, float kinhTuyenMatTroi, Mau *mauToi ) {
+void mauToiNghichMatTroi( Anh *anhBauTroi, MoiTruong *moiTruong ) {
    
    short beRong = anhBauTroi->beRong;
    short beCao = anhBauTroi->beRong >> 1;
    short nuaBeCao = beRong >> 2;        // (0,25)
-   short kinhTuyen_matTroi = kinhTuyenMatTroi*anhBauTroi->beRong;
-   printf( "kinhTuyen matTroi %d\n", kinhTuyen_matTroi );
+   short kinhTuyen_matTroi = moiTruong->kinhTuyenMatTroi*anhBauTroi->beRong;
+ //  printf( "kinhTuyen matTroi %d\n", kinhTuyen_matTroi );
    
    short hang = 0;
    while( hang < beCao ) {
@@ -341,11 +328,11 @@ void mauToiNghichMatTroi( Anh *anhBauTroi, float kinhTuyenMatTroi, Mau *mauToi )
          float nghichPhaMau = 0.5f*(float)cachKinhTuyen/(float)beCao;
          nghichPhaMau *= tiSoHang;
          float phaMau = 1.0f - nghichPhaMau;
-         if( hang == nuaBeCao )
-         printf( "cot %d  cacKinh %d   nghichPha %5.3f  pha %5.3f\n", cot, cachKinhTuyen, nghichPhaMau, phaMau );
-         anhBauTroi->kenhDo[hang*beRong + cot] = phaMau*anhBauTroi->kenhDo[hang*beRong + cot] + nghichPhaMau*mauToi->d;
-         anhBauTroi->kenhLuc[hang*beRong + cot] = phaMau*anhBauTroi->kenhLuc[hang*beRong + cot] + nghichPhaMau*mauToi->l;
-         anhBauTroi->kenhXanh[hang*beRong + cot] = phaMau*anhBauTroi->kenhXanh[hang*beRong + cot] + nghichPhaMau*mauToi->x;
+//         if( hang == nuaBeCao )
+//         printf( "cot %d  cacKinh %d   nghichPha %5.3f  pha %5.3f\n", cot, cachKinhTuyen, nghichPhaMau, phaMau );
+         anhBauTroi->kenhDo[hang*beRong + cot] = phaMau*anhBauTroi->kenhDo[hang*beRong + cot] + nghichPhaMau*moiTruong->mauToi.d;
+         anhBauTroi->kenhLuc[hang*beRong + cot] = phaMau*anhBauTroi->kenhLuc[hang*beRong + cot] + nghichPhaMau*moiTruong->mauToi.l;
+         anhBauTroi->kenhXanh[hang*beRong + cot] = phaMau*anhBauTroi->kenhXanh[hang*beRong + cot] + nghichPhaMau*moiTruong->mauToi.x;
          cot++;
       }
       hang++;
@@ -353,34 +340,115 @@ void mauToiNghichMatTroi( Anh *anhBauTroi, float kinhTuyenMatTroi, Mau *mauToi )
 }
 
 #pragma mark ---- Màu
-void boVang() {
+MoiTruong bauTroiVang() {
    
-   Mau dayTroi;
-   dayTroi.d = 0.270f;
-   dayTroi.l = 0.20f;
-   dayTroi.x = 0.10f;
+   MoiTruong moiTruong;
    
-   Mau giuaTroiDuoi;
-   giuaTroiDuoi.d = 0.70f;
-   giuaTroiDuoi.l = 0.40f;
-   giuaTroiDuoi.x = 0.270f;
+   moiTruong.mauDayTroi.d = 0.270f;
+   moiTruong.mauDayTroi.l = 0.20f;
+   moiTruong.mauDayTroi.x = 0.10f;
    
-   Mau chanTroi;
-   chanTroi.d = 1.000f;
-   chanTroi.l = 0.851f;
-   chanTroi.x = 0.600f;
+   moiTruong.mauGiuaTroiDuoi.d = 0.70f;
+   moiTruong.mauGiuaTroiDuoi.l = 0.40f;
+   moiTruong.mauGiuaTroiDuoi.x = 0.270f;
    
-   Mau giuaTroiTren;
-   giuaTroiTren.d = 1.00f;
-   giuaTroiTren.l = 0.83f;
-   giuaTroiTren.x = 0.100f;
+   moiTruong.mauChanTroi.d = 1.000f;
+   moiTruong.mauChanTroi.l = 0.851f;
+   moiTruong.mauChanTroi.x = 0.600f;
    
-   Mau dinhTroi;
-   dinhTroi.d = 1.000f;
-   dinhTroi.l = 0.550f;
-   dinhTroi.x = 0.160f;
+   moiTruong.mauGiuaTroiTren.d = 1.00f;
+   moiTruong.mauGiuaTroiTren.l = 0.83f;
+   moiTruong.mauGiuaTroiTren.x = 0.100f;
+   
+   moiTruong.mauDinhTroi.d = 1.000f;
+   moiTruong.mauDinhTroi.l = 0.550f;
+   moiTruong.mauDinhTroi.x = 0.160f;
+
+   moiTruong.viTriMauGiuaTren = 0.15f;   // phân số nữa bầu trời cho vị trí màu gĩa trời
+   moiTruong.viTriMauGiuaDuoi = 0.15f;   // phân số nữa bầu trời cho vị trí màu gĩa trời
+
+   moiTruong.coMatTroi = 0x00;
+
+   return moiTruong;
 }
 
+MoiTruong bauTroiChieu_xeBay() {
+   
+   MoiTruong moiTruong;
+
+   moiTruong.mauDayTroi.d = 0.270f;
+   moiTruong.mauDayTroi.l = 0.20f;
+   moiTruong.mauDayTroi.x = 0.10f;
+
+   moiTruong.mauGiuaTroiDuoi.d = 0.70f;
+   moiTruong.mauGiuaTroiDuoi.l = 0.40f;
+   moiTruong.mauGiuaTroiDuoi.x = 0.270f;
+
+   moiTruong.mauChanTroi.d = 1.000f;
+   moiTruong.mauChanTroi.l = 0.451f;
+   moiTruong.mauChanTroi.x = 0.310f;
+   
+   moiTruong.mauGiuaTroiTren.d = 1.00f;
+   moiTruong.mauGiuaTroiTren.l = 0.72f;
+   moiTruong.mauGiuaTroiTren.x = 0.60f;
+   
+   moiTruong.mauDinhTroi.d = 0.452f;
+   moiTruong.mauDinhTroi.l = 0.750f;
+   moiTruong.mauDinhTroi.x = 1.000f;
+   
+   moiTruong.viTriMauGiuaTren = 0.15f;   // phân số nữa bầu trời cho vị trí màu gĩa trời
+   moiTruong.viTriMauGiuaDuoi = 0.02f;   // phân số nữa bầu trời cho vị trí màu gĩa trời
+   
+   // ---- mặt trời
+   moiTruong.coMatTroi = 0x01;
+   moiTruong.kinhTuyenMatTroi = 0.05f;
+   moiTruong.viTuyenMatTroi = 0.05f;
+   moiTruong.banKinhMatTroi = 0.005f;
+   moiTruong.banKinhHaoQuang = 0.035f;
+
+   moiTruong.mauMatTroi.d = 2.375f*5.0f;
+   moiTruong.mauMatTroi.l = 1.550f*5.0f;
+   moiTruong.mauMatTroi.x = 1.00f*5.0f;
+   
+   moiTruong.mauToi.d = 0.2f;
+   moiTruong.mauToi.l = 0.2f;
+   moiTruong.mauToi.x = 0.5f;
+   
+   return moiTruong;
+}
+
+MoiTruong bauTroiToi_xeBay() {
+   
+   MoiTruong moiTruong;
+   
+   moiTruong.mauDayTroi.d = 0.125f;
+   moiTruong.mauDayTroi.l = 0.073f;
+   moiTruong.mauDayTroi.x = 0.076;
+   
+   moiTruong.mauGiuaTroiDuoi.d = 0.328f;
+   moiTruong.mauGiuaTroiDuoi.l = 0.241f;
+   moiTruong.mauGiuaTroiDuoi.x = 0.220f;
+   
+   moiTruong.mauChanTroi.d = 0.272f;
+   moiTruong.mauChanTroi.l = 0.308f;
+   moiTruong.mauChanTroi.x = 0.520f;
+   
+   moiTruong.mauGiuaTroiTren.d = 0.128f;
+   moiTruong.mauGiuaTroiTren.l = 0.192f;
+   moiTruong.mauGiuaTroiTren.x = 0.520f;
+   
+   moiTruong.mauDinhTroi.d = 0.029f;
+   moiTruong.mauDinhTroi.l = 0.035f;
+   moiTruong.mauDinhTroi.x = 0.168f;
+   
+   moiTruong.viTriMauGiuaTren = 0.15f;   // phân số nữa bầu trời cho vị trí màu gĩa trời
+   moiTruong.viTriMauGiuaDuoi = 0.08f;   // phân số nữa bầu trời cho vị trí màu gĩa trời
+   
+   // ---- mặt trời
+   moiTruong.coMatTroi = 0x00;
+
+   return moiTruong;
+}
 
 #pragma mark ---- Ảnh
 Anh taoAnhVoiCoKich( unsigned short beRong, unsigned short beCao, float coKichDiemAnh ) {
