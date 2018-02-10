@@ -2,8 +2,8 @@
 //
 //  Kết xuất ảnh hào quang phóng để ghép ảnh với phần mềm Blender
 //      (chuẩn ảnh 4k: 4096 x 2160 điểm ảnh)
-//  Phiên Bản 0.5
-//  Phát hành 2561.02.09
+//  Phiên Bản 0.6
+//  Phát hành 2561.02.10
 //  Khởi đầu 2561.02.09
 
 //  Biên dịch cho gcc: gcc -lm -lz HaoQuang.c -o <tên chương trình>
@@ -61,7 +61,7 @@ typedef struct {
 HaoQuang hoaQuangSieuKhongGian( Mau *mau, unsigned  short x, unsigned y, float tocDo, float tiSo );
 
 /* Tính Hào Quang */
-void tinhHaoQuang( Anh *anhBauTroi, HaoQuang *haoQuang, unsigned short soHoatHinh );
+void tinhHaoQuang( Anh *anhBauTroi, HaoQuang *haoQuang, unsigned short soHoatHinh, float phaiMau );
 
 void docThamSoHoatHinh( int argc, char **argv, char *xauKemTen, unsigned int *viTriX, unsigned int *viTriY,
                        unsigned int *soHoatHinhDau, unsigned int *soHoatHinhCuoi,
@@ -94,6 +94,10 @@ int main( int argc, char **argv ) {
       docThamSoHoatHinh( argc, argv, xauKemTen, &viTriTamX, &viTriTamY, &soHoatHinhDau, &soHoatHinhCuoi,
                               &tocDo, &tiSoPhongTo );
       
+      float buocPhaiMau = 1.0f/(soHoatHinhCuoi - soHoatHinhDau);
+      float phaiMau = 1.0f;
+      printf( "buocPhaiMau %5.3f\n", buocPhaiMau );
+      
       Mau mauHaoQuang;
       mauHaoQuang.d = 1.0f;
       mauHaoQuang.l = 1.0f;
@@ -107,11 +111,12 @@ int main( int argc, char **argv ) {
          sprintf( tenAnh, "HaoQuang_%s_%03d.exr", xauKemTen, soHoatHinhDau );
          
          // ---- bầu trời
-         tinhHaoQuang( &anhHaoQuang, &haoQuang, soHoatHinhDau );
+         tinhHaoQuang( &anhHaoQuang, &haoQuang, soHoatHinhDau, phaiMau );
 
          luuAnhZIP( tenAnh, &anhHaoQuang, kKIEU_FLOAT, 0 );
          printf( "Lưu ảnh %s:\n", tenAnh );
          soHoatHinhDau++;
+         phaiMau -= buocPhaiMau;
       }
       xoaAnh( &anhHaoQuang );
       
@@ -133,7 +138,7 @@ HaoQuang hoaQuangSieuKhongGian( Mau *mau, unsigned  short x, unsigned y, float t
    haoQuangSieuKhongGian.tamY = y*tiSo;                  // vị trí trung tâm hào quang y
    haoQuangSieuKhongGian.mau = *mau;                // màu hào quang
    
-   haoQuangSieuKhongGian.banKinhTrong = -100.0f*tiSo;      // bán kính trong, điểm ảnh
+   haoQuangSieuKhongGian.banKinhTrong = -200.0f*tiSo;      // bán kính trong, điểm ảnh
    haoQuangSieuKhongGian.banKinhGiuaTrong = 20.0f*tiSo;  // bán kính giữa trong, điểm ảnh
    haoQuangSieuKhongGian.banKinhGiuaNgoai = 22.0f*tiSo;  // bán kính giữa ngoài, điểm ảnh
    haoQuangSieuKhongGian.banKinhNgoai = 50.0f*tiSo;      // bán kính ngoài, điểm ảnh
@@ -156,14 +161,13 @@ HaoQuang hoaQuangSieuKhongGian( Mau *mau, unsigned  short x, unsigned y, float t
 // +----------------------+
 // 
 
+void tinhHaoQuang( Anh *anhHaoQuang, HaoQuang *haoQuang, unsigned short soHoatHinh, float phaiMau  ) {
 
-void tinhHaoQuang( Anh *anhHaoQuang, HaoQuang *haoQuang, unsigned short soHoatHinh ) {
+   float cachNo = haoQuang->tocDoNo*soHoatHinh;
 
    float cachNgoai = haoQuang->banKinhNgoai - haoQuang->banKinhGiuaNgoai;
    float cachGiua = haoQuang->banKinhGiuaNgoai - haoQuang->banKinhGiuaTrong;
-   float cachTrong = haoQuang->banKinhGiuaTrong - haoQuang->banKinhTrong;
-   
-   float cachNo = haoQuang->tocDoNo*soHoatHinh;
+   float cachTrong = haoQuang->banKinhGiuaTrong - haoQuang->banKinhTrong + cachNo*0.5f;
 
    // ---- quét ngang
    unsigned int diaChiTrongKenh = 0;
@@ -188,24 +192,24 @@ void tinhHaoQuang( Anh *anhHaoQuang, HaoQuang *haoQuang, unsigned short soHoatHi
          else if( cachDiemAnh > (haoQuang->banKinhGiuaNgoai + cachNo) ) {
             float soPhan = 1.0f - (cachDiemAnh - haoQuang->banKinhGiuaNgoai - cachNo)/cachNgoai;
 
-            anhHaoQuang->kenhDo[diaChiTrongKenh] = haoQuang->mau.d*soPhan;
-            anhHaoQuang->kenhLuc[diaChiTrongKenh] = haoQuang->mau.d*soPhan;
-            anhHaoQuang->kenhXanh[diaChiTrongKenh] = haoQuang->mau.d*soPhan;
-            anhHaoQuang->kenhDuc[diaChiTrongKenh] = soPhan;
+            anhHaoQuang->kenhDo[diaChiTrongKenh] = haoQuang->mau.d*soPhan*phaiMau;
+            anhHaoQuang->kenhLuc[diaChiTrongKenh] = haoQuang->mau.d*soPhan*phaiMau;
+            anhHaoQuang->kenhXanh[diaChiTrongKenh] = haoQuang->mau.d*soPhan*phaiMau;
+            anhHaoQuang->kenhDuc[diaChiTrongKenh] = soPhan*phaiMau;
          }
          else if( cachDiemAnh > (haoQuang->banKinhGiuaTrong + cachNo) ) {
-            anhHaoQuang->kenhDo[diaChiTrongKenh] = haoQuang->mau.d;
-            anhHaoQuang->kenhLuc[diaChiTrongKenh] = haoQuang->mau.l;
-            anhHaoQuang->kenhXanh[diaChiTrongKenh] = haoQuang->mau.x;
-            anhHaoQuang->kenhDuc[diaChiTrongKenh] = haoQuang->mau.dd;
+            anhHaoQuang->kenhDo[diaChiTrongKenh] = haoQuang->mau.d*phaiMau;
+            anhHaoQuang->kenhLuc[diaChiTrongKenh] = haoQuang->mau.l*phaiMau;
+            anhHaoQuang->kenhXanh[diaChiTrongKenh] = haoQuang->mau.x*phaiMau;
+            anhHaoQuang->kenhDuc[diaChiTrongKenh] = haoQuang->mau.dd*phaiMau;
          }
-         else if( cachDiemAnh > (haoQuang->banKinhTrong + cachNo) ) {
-            float soPhan = (cachDiemAnh - haoQuang->banKinhTrong - cachNo)/cachTrong;
+         else if( cachDiemAnh > (haoQuang->banKinhTrong + cachNo*0.5) ) {
+            float soPhan = (cachDiemAnh - haoQuang->banKinhTrong - cachNo*0.5f)/cachTrong;
             
-            anhHaoQuang->kenhDo[diaChiTrongKenh] = haoQuang->mau.d*soPhan;
-            anhHaoQuang->kenhLuc[diaChiTrongKenh] = haoQuang->mau.d*soPhan;
-            anhHaoQuang->kenhXanh[diaChiTrongKenh] = haoQuang->mau.d*soPhan;
-            anhHaoQuang->kenhDuc[diaChiTrongKenh] = soPhan;
+            anhHaoQuang->kenhDo[diaChiTrongKenh] = haoQuang->mau.d*soPhan*phaiMau;
+            anhHaoQuang->kenhLuc[diaChiTrongKenh] = haoQuang->mau.d*soPhan*phaiMau;
+            anhHaoQuang->kenhXanh[diaChiTrongKenh] = haoQuang->mau.d*soPhan*phaiMau;
+            anhHaoQuang->kenhDuc[diaChiTrongKenh] = soPhan*phaiMau;
          }
          else {
             anhHaoQuang->kenhDo[diaChiTrongKenh] = 0.0f;
